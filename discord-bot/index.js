@@ -10,9 +10,9 @@ const {
     ButtonStyle,
     REST,
     Routes,
-    SlashCommandBuilder,
-    AttachmentBuilder
+    SlashCommandBuilder
 } = require('discord.js');
+const http = require('http');
 
 // ================== ENV CONFIG ==================
 const BOT_TOKEN = process.env.BOT_TOKEN;
@@ -20,6 +20,15 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 const TEAM_ROLE_ID = process.env.TEAM_ROLE_ID;
 const LOG_CHANNEL_ID = process.env.LOG_CHANNEL_ID;
+const PORT = process.env.PORT || 3000;
+
+// ================== HTTP SERVER (für Render) ==================
+http.createServer((req, res) => {
+    res.writeHead(200);
+    res.end('Bot is running!');
+}).listen(PORT, () => {
+    console.log(`HTTP Server läuft auf Port ${PORT}`);
+});
 
 // ================== CLIENT ==================
 const client = new Client({
@@ -48,17 +57,18 @@ const commands = [
 
 const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
 
+// FIX: Funktion wird jetzt auch aufgerufen (IIFE mit den letzten `()`)
 (async () => {
     try {
         await rest.put(
             Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
             { body: commands }
         );
-        console.log("Slash Commands registriert");
+        console.log('Slash Commands registriert');
     } catch (err) {
-        console.error(err);
+        console.error('Fehler beim Registrieren der Commands:', err);
     }
-});
+})(); // <-- Das fehlte in deinem original Code!
 
 // ================== READY ==================
 client.once('ready', () => {
